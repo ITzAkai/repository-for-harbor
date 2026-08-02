@@ -6,9 +6,18 @@
       "name": "MangaDex (Arabic)",
       "version": "1.0.0",
       "lang": "ar",
-      "nsfw": false,
+      "nsfw": true,
       "icon": "https://mangadex.org/img/brand/mangadex-logo.svg",
       "entry": "mangadex-ar.plugin.js"
+    },
+    {
+      "id": "olympustaff",
+      "name": "OlympusStaff",
+      "version": "1.0.0",
+      "lang": "ar",
+      "nsfw": false,
+      "icon": "https://olympustaff.com/assets/images/favicon.png",
+      "entry": "olympustaff.plugin.js"
     }
   ]
 }
