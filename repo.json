@@ -1,0 +1,14 @@
+{
+  "name": "My Manga Repo",
+  "plugins": [
+    {
+      "id": "mangadex-ar",
+      "name": "MangaDex (Arabic)",
+      "version": "1.0.0",
+      "lang": "ar",
+      "nsfw": false,
+      "icon": "https://mangadex.org/img/brand/mangadex-logo.svg",
+      "entry": "mangadex-ar.plugin.js"
+    }
+  ]
+}
