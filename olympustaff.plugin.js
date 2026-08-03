@@ -172,43 +172,30 @@ const plugin = {
     },
     async search(query) {
 
-    const res = await harbor.http(
-        BASE + "/ajax/search?keyword=" + encodeURIComponent(query),
-        {
-            responseType: "text",
-            headers: {
-                "X-Requested-With": "XMLHttpRequest"
+    try {
+
+        const res = await harbor.http(
+            BASE + "/ajax/search?keyword=" + encodeURIComponent(query),
+            {
+                responseType: "text",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
             }
-        }
-    );
+        );
 
-    if (!res.ok)
-        return [];
+        if (!res.ok)
+            throw new Error("HTTP " + res.status);
 
-    const doc = harbor.parseHtml(res.body);
+        throw new Error(res.body);
 
-    return doc
-        .querySelectorAll("a[href*='/series/']")
-        .map(link => ({
+    } catch (e) {
 
-            id: cleanId(link.attr("href")),
+        throw new Error(String(e));
 
-            title:
-                link.querySelector("h4")
-                    ?.text()
-                    ?.trim(),
-
-            cover:
-                abs(
-                    link.querySelector("img")
-                        ?.attr("src")
-                )
-
-        }))
-        .filter(m => m.id);
+    }
 
     },
-
     async detail(id) {
     const doc = await getDoc("/series/" + id);
 
