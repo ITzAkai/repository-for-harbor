@@ -2,15 +2,23 @@ const BASE = "https://olympustaff.com";
 const PAGE_SIZE = 48;
 
 async function getDoc(path) {
-    const res = await harbor.http(BASE + path, {
-        responseType: "text"
+
+    const url = BASE + path;
+
+    const res = await harbor.http(url, {
+        responseType: "text",
+        headers: {
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
+        }
     });
 
     if (!res.ok)
-        throw new Error(`HTTP ${res.status}: ${path}`);
+        throw new Error(`HTTP ${res.status}: ${url}`);
 
     return harbor.parseHtml(res.body);
 }
+
 
 function abs(url) {
 
