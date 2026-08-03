@@ -272,25 +272,27 @@ const plugin = {
     },
     async popular(offset = 0, tagId) {
 
+    harbor.log("POPULAR CALLED");
+    harbor.log(JSON.stringify(tagId));
+    
     let page = Math.floor(offset / PAGE_SIZE) + 1;
 
     if (page < 1)
         page = 1;
 
     // Genre browsing
-    if (tagId) {
+   if (tagId) {
 
-        const doc = await getDoc(
-            "/series?genre=" +
-            encodeURIComponent(tagId) +
-            "&page=" +
-            page
-        );
+    const doc = await getDoc(
+        "/series?genre=" +
+        encodeURIComponent(tagId) +
+        "&page=" +
+        page
+    );
 
-        return doc
-            .querySelectorAll(".bsx")
-            .map(mangaCard)
-            .filter(Boolean);
+    const cards = doc.querySelectorAll(".bsx");
+
+    throw new Error("Found " + cards.length + " cards");
 
     }
 
