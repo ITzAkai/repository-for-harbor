@@ -210,8 +210,22 @@ const plugin = {
 
     async pageUrls(chapterId) {
 
-        return [];
+    const url = chapterId.startsWith("http")
+        ? chapterId.replace(BASE, "")
+        : "/" + chapterId.replace(/^\/+/, "");
 
+    const doc = await getDoc(url);
+
+    const pages = doc
+        .querySelectorAll(".manga-chapter-img")
+        .map(img => abs(img.attr("src")))
+        .filter(Boolean);
+
+    if (!pages.length) {
+        throw new Error("No pages found");
+    }
+
+    return pages;
     }
 
 };
