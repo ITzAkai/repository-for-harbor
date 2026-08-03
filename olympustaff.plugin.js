@@ -269,7 +269,7 @@ const plugin = {
                         ?.text()
                         ?.trim(),
 
-                language: "ar",
+                language: "en",
 
                 publishAt:
                     card.querySelector(".chapter-date span")
