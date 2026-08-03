@@ -275,7 +275,9 @@ const plugin = {
 
     },
     async popular(offset = 0, tagId) {
-
+    
+        throw new Error("tagId = " + tagId);
+        
     let page = Math.floor(offset / PAGE_SIZE) + 1;
 
     if (page < 1)
