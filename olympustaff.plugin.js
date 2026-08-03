@@ -80,47 +80,41 @@ const plugin = {
 
     async tags() {
 
-    const doc = await getDoc("/");
+        return [
 
-    return doc
-        .querySelectorAll("#select_genre option")
-        .map(option => {
+            {
+            id: "popular",
+            name: "🔥 Popular",
+            group: "Collections"
+            },
 
-            const value = option.attr("value");
-            const name = option.text().trim();
+            {
+            id: "latest",
+            name: "🆕 Latest Updates",
+            group: "Collections"
+            },
 
-            if (!value)
-                return null;
+            {
+            id: "views",
+            name: "👑 Most Viewed",
+            group: "Collections"
+            }
 
-            return {
-                id: value,
-                name,
-                group: "Genres"
-            };
-
-        })
-        .filter(Boolean);
+        ];
 
     },
     async popular(offset = 0) {
-    
-    const page = Math.floor(offset / PAGE_SIZE) + 1;
 
-    let path = page === 1 ? "/" : "/?page=" + page;
-
-    if (tagId) {
-        path += (path.includes("?") ? "&" : "?") +
-            "genre=" + encodeURIComponent(tagId);
-    }
-
-    const doc = await getDoc(path);
     let page = Math.floor(offset / PAGE_SIZE) + 1;
 
     if (page < 1)
         page = 1;
 
-    const doc = await getDoc(page === 1 ? "/" : "/?page=" + page);
-
+    const doc = await getDoc(
+        page === 1
+            ? "/"
+            : "/?page=" + page
+    );
 
     const seen = new Set();
 
@@ -130,23 +124,17 @@ const plugin = {
 
             const link = box.querySelector(".imgu a");
 
-            if (!link) return null;
-
-            const id = cleanId(link.attr("href"));
-
-            if (!id || seen.has(id))
+            if (!link)
                 return null;
 
-            seen.add(id);
+            const item = {
 
-            return {
-
-                id,
+                id: cleanId(link.attr("href")),
 
                 title:
-                    box.querySelector(".info h3")
-                        ?.text()
-                        ?.trim(),
+                    text(
+                        box.querySelector(".info h3")
+                    ),
 
                 cover:
                     abs(
@@ -156,12 +144,19 @@ const plugin = {
 
             };
 
+            if (!item.id)
+                return null;
+
+            if (seen.has(item.id))
+                return null;
+
+            seen.add(item.id);
+
+            return item;
+
         })
         .filter(Boolean);
 
-    },
-    async latest(offset = 0) {
-    return this.popular(offset);
     },
     async search(query, offset = 0) {
 
