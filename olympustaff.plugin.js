@@ -68,9 +68,13 @@ function mangaCard(card) {
         id: cleanId(attr(link, "href")),
 
         title:
-            text(card.querySelector(".tt")) ||
-            attr(link, "title") ||
-            "Untitled",
+    numberText
+        ? "Chapter " + numberText
+        : (
+            card.querySelector(".chapter-title")
+                ?.text()
+                ?.trim() || "Chapter"
+        ),
 
         cover:
             abs(
