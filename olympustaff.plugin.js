@@ -246,7 +246,8 @@ const plugin = {
             "/series/" + id +
             (page === 1 ? "" : "?page=" + page)
         );
-
+        throw new Error("PAGE = " + page);
+        
         const list = doc.querySelectorAll(".chapter-card");
 
         if (!list.length)
