@@ -105,11 +105,47 @@ const plugin = {
         genres,
         status
     };
-},
+    },
 
     async chapters(id) {
 
-        return [];
+    const doc = await getDoc("/series/" + id);
+
+    return doc
+        .querySelectorAll(".chapter-card")
+        .map(card => {
+
+            const a = card.querySelector(".chapter-link");
+
+            if (!a) return null;
+
+            const href = a.attr("href") || "";
+
+            return {
+
+                id: href.replace(BASE + "/", ""),
+
+                chapter: parseFloat(
+                    card.querySelector(".chapter-number")
+                        ?.text()
+                        .replace(/[^\d.]/g, "")
+                ) || 0,
+
+                title: card.querySelector(".chapter-title")
+                    ?.text()
+                    ?.trim(),
+
+                language: "ar",
+
+                publishAt:
+                    card.querySelector(".chapter-date span")
+                        ?.text()
+                        ?.trim()
+
+            };
+
+        })
+        .filter(Boolean);
 
     },
 
