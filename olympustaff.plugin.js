@@ -80,37 +80,45 @@ const plugin = {
 
     async tags() {
 
-        return [
+    const doc = await getDoc("/");
 
-            {
-            id: "popular",
-            name: "🔥 Popular",
-            group: "Collections"
-            },
+    return doc
+        .querySelectorAll("#select_genre option")
+        .map(option => {
 
-            {
-            id: "latest",
-            name: "🆕 Latest Updates",
-            group: "Collections"
-            },
+            const value = option.attr("value");
+            const name = option.text().trim();
 
-            {
-            id: "views",
-            name: "👑 Most Viewed",
-            group: "Collections"
-            }
+            if (!value)
+                return null;
 
-        ];
+            return {
+                id: value,
+                name,
+                group: "Genres"
+            };
+
+        })
+        .filter(Boolean);
 
     },
     async popular(offset = 0) {
+    
+    const page = Math.floor(offset / PAGE_SIZE) + 1;
 
+    let path = page === 1 ? "/" : "/?page=" + page;
+
+    if (tagId) {
+        path += (path.includes("?") ? "&" : "?") +
+            "genre=" + encodeURIComponent(tagId);
+    }
+
+    const doc = await getDoc(path);
     let page = Math.floor(offset / PAGE_SIZE) + 1;
 
     if (page < 1)
         page = 1;
 
-    const doc = await getDoc(page === 1 ? "/" : "/?page=" + page);
 
 
     const seen = new Set();
