@@ -157,7 +157,7 @@ const plugin = {
         })
         .filter(Boolean);
 
-    },
+},
     async search(query, offset = 0) {
 
     const page = Math.floor(offset / PAGE_SIZE) + 1;
