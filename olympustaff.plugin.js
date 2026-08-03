@@ -275,8 +275,6 @@ const plugin = {
 
     },
     async popular(offset = 0, tagId) {
-    
-        throw new Error("tagId = " + tagId);
 
     let page = Math.floor(offset / PAGE_SIZE) + 1;
 
@@ -284,19 +282,14 @@ const plugin = {
         page = 1;
 
     // Genre browsing
-    throw new Error(
-    "tagId = " + JSON.stringify(tagId)
-    );
-
     if (tagId) {
 
-        const url =
-    "/series?genre=" +
-    encodeURIComponent(tagId) +
-    "&page=" +
-    page;
-
-    throw new Error(url);
+        const doc = await getDoc(
+            "/series?genre=" +
+            encodeURIComponent(tagId) +
+            "&page=" +
+            page
+        );
 
         return doc
             .querySelectorAll(".bsx")
@@ -324,26 +317,14 @@ const plugin = {
                 return null;
 
             const item = {
-
                 id: cleanId(link.attr("href")),
-
-                title:
-                    text(
-                        box.querySelector(".info h3")
-                    ),
-
-                cover:
-                    abs(
-                        box.querySelector(".imgu img")
-                            ?.attr("src")
-                    )
-
+                title: text(box.querySelector(".info h3")),
+                cover: abs(
+                    box.querySelector(".imgu img")?.attr("src")
+                )
             };
 
-            if (!item.id)
-                return null;
-
-            if (seen.has(item.id))
+            if (!item.id || seen.has(item.id))
                 return null;
 
             seen.add(item.id);
@@ -354,8 +335,11 @@ const plugin = {
         .filter(Boolean);
 
     },
-    async search(query) {
-
+    async search(query, offset = 0, tagId) {
+    
+        if (tagId) {
+            return this.popular(offset, tagId);
+        }
     const library = await loadLibrary();
 
     query = query.toLowerCase();
