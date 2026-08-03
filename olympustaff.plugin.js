@@ -1,21 +1,23 @@
 const BASE = "https://olympustaff.com";
+const PAGE_SIZE = 48;
 
 async function getDoc(path) {
     const res = await harbor.http(BASE + path, {
         responseType: "text"
     });
 
-    if (!res.ok) {
+    if (!res.ok)
         throw new Error(`HTTP ${res.status}: ${path}`);
-    }
 
     return harbor.parseHtml(res.body);
 }
 
 function abs(url) {
-    if (!url) return undefined;
 
-    if (url.startsWith("http://") || url.startsWith("https://"))
+    if (!url)
+        return undefined;
+
+    if (/^https?:\/\//i.test(url))
         return url;
 
     if (url.startsWith("//"))
@@ -27,24 +29,49 @@ function abs(url) {
     return BASE + "/" + url;
 }
 
+function text(node) {
+    return node?.text()?.trim() || "";
+}
+
+function attr(node, name) {
+    return node?.attr(name);
+}
+
+function cleanId(url) {
+
+    if (!url)
+        return "";
+
+    return url
+        .replace(BASE, "")
+        .replace(/^\/series\//, "")
+        .replace(/\/$/, "");
+}
+
 function mangaCard(card) {
 
     const link = card.querySelector("a");
-    const img = card.querySelector("img");
-    const title = card.querySelector(".tt");
 
     if (!link)
         return null;
 
-    const href = link.attr("href") || "";
-
     return {
-        id: href.replace(BASE + "/series/", "").replace(/\/$/, ""),
-        title: title?.text()?.trim() || link.attr("title") || "",
-        cover: abs(img?.attr("src"))
-    };
-}
 
+        id: cleanId(attr(link, "href")),
+
+        title:
+            text(card.querySelector(".tt")) ||
+            attr(link, "title") ||
+            "Untitled",
+
+        cover:
+            abs(
+                attr(card.querySelector("img"), "src")
+            )
+
+    };
+
+}
 const plugin = {
 
     id: "olympustaff",
@@ -53,22 +80,54 @@ const plugin = {
 
     async popular(offset = 0) {
 
-        const page = Math.floor(offset / 48) + 1;
+    const page = Math.floor(offset / PAGE_SIZE) + 1;
 
-        const doc = await getDoc("/series?page=" + page);
+    const doc = await getDoc("/series?page=" + page);
 
-        return doc
-            .querySelectorAll(".bsx")
-            .map(mangaCard)
-            .filter(Boolean);
+    return doc
+        .querySelectorAll(".bsx")
+        .map(mangaCard)
+        .filter(Boolean);
 
     },
 
     async search(query, offset = 0) {
 
-        return [];
+    const page = Math.floor(offset / PAGE_SIZE) + 1;
 
-    },
+    const endpoints = [
+
+        "/series?search=" +
+        encodeURIComponent(query) +
+        "&page=" +
+        page,
+
+        "/?s=" +
+        encodeURIComponent(query)
+
+    ];
+
+    for (const url of endpoints) {
+
+        try {
+
+            const doc = await getDoc(url);
+
+            const list =
+                doc.querySelectorAll(".bsx")
+                    .map(mangaCard)
+                    .filter(Boolean);
+
+            if (list.length)
+                return list;
+
+        } catch (_) {}
+
+    }
+
+    return [];
+
+},
 
     async detail(id) {
     const doc = await getDoc("/series/" + id);
@@ -105,17 +164,49 @@ const plugin = {
         genres,
         status
     };
-    },
+},
 
     async chapters(id) {
 
     const doc = await getDoc("/series/" + id);
 
-    const cards = doc.querySelectorAll(".chapter-card");
+    return doc
+        .querySelectorAll(".chapter-card")
+        .map(card => {
 
-    throw new Error("Chapter cards found: " + cards.length);
+            const a = card.querySelector(".chapter-link");
 
-},
+            if (!a) return null;
+
+            const href = a.attr("href") || "";
+
+            return {
+
+                id: href.replace(BASE + "/", ""),
+
+                chapter: parseFloat(
+                    card.querySelector(".chapter-number")
+                        ?.text()
+                        .replace(/[^\d.]/g, "")
+                ) || 0,
+
+                title: card.querySelector(".chapter-title")
+                    ?.text()
+                    ?.trim(),
+
+                language: "ar",
+
+                publishAt:
+                    card.querySelector(".chapter-date span")
+                        ?.text()
+                        ?.trim()
+
+            };
+
+        })
+        .filter(Boolean);
+
+    },
 
     async pageUrls(chapterId) {
 
