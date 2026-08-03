@@ -156,25 +156,13 @@ const plugin = {
 
     async tags() {
 
-    const doc = await getDoc("/series");
-
-    return doc
-        .querySelectorAll("#select_genre option")
-        .map(option => {
-
-            const value = option.attr("value")?.trim();
-
-            if (!value)
-                return null;
-
-            return {
-                id: value,
-                name: value,
-                group: "Genres"
-            };
-
-        })
-        .filter(Boolean);
+    return [
+        {
+            id: "test",
+            name: "Test",
+            group: "Genres"
+        }
+    ];
 
     },
     async popular(offset = 0, tagId) {
