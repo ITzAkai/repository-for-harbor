@@ -172,28 +172,29 @@ const plugin = {
     },
     async search(query) {
 
-    try {
+    const doc = await getDoc(
+        "/search?keyword=" + encodeURIComponent(query)
+    );
 
-        const res = await harbor.http(
-            BASE + "/ajax/search?keyword=" + encodeURIComponent(query),
-            {
-                responseType: "text",
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            }
-        );
+    return doc
+        .querySelectorAll("#results > a")
+        .map(a => ({
 
-        if (!res.ok)
-            throw new Error("HTTP " + res.status);
+            id: cleanId(a.attr("href")),
 
-        throw new Error(res.body);
+            title:
+                a.querySelector("h4")
+                    ?.text()
+                    ?.trim(),
 
-    } catch (e) {
+            cover:
+                abs(
+                    a.querySelector("img")
+                        ?.attr("src")
+                )
 
-        throw new Error(String(e));
-
-    }
+        }))
+        .filter(Boolean);
 
     },
     async detail(id) {
