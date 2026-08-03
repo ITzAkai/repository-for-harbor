@@ -242,7 +242,7 @@ const plugin = {
     while (path) {
 
         const doc = await getDoc(path);
-        throw new Error(path);
+        throw new Error("TEST123");
 
         doc.querySelectorAll(".chapter-card").forEach(card => {
 
@@ -295,6 +295,9 @@ const plugin = {
 
     }
 
+    chapters.sort((a, b) => {
+        return (a.chapter || 0) - (b.chapter || 0);
+    });
 
     return chapters;
 
