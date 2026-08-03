@@ -295,10 +295,7 @@ const plugin = {
             .replace(BASE, "");
 
     }
-    
-    chapters.sort((a, b) => {
-        return (a.chapter || 0) - (b.chapter || 0);
-    });
+
 
     return chapters;
 
