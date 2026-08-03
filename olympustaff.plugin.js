@@ -140,7 +140,6 @@ async function loadLibrary() {
         page++;
 
     }
-    let genreCache = null;
 
     return mangaCache;
     
@@ -271,30 +270,27 @@ const plugin = {
 
     },
     async popular(offset = 0, tagId) {
-
-    harbor.log("POPULAR CALLED");
-    harbor.log(JSON.stringify(tagId));
     
-    let page = Math.floor(offset / PAGE_SIZE) + 1;
+        let page = Math.floor(offset / PAGE_SIZE) + 1;
 
-    if (page < 1)
-        page = 1;
+        if (page < 1)
+            page = 1;
 
-    // Genre browsing
-   if (tagId) {
+        // Genre browsing
+        if (tagId) {
 
-    const doc = await getDoc(
-        "/series?genre=" +
-        encodeURIComponent(tagId) +
-        "&page=" +
-        page
-    );
+            const doc = await getDoc(
+                "/series?genre=" +
+                encodeURIComponent(tagId) +
+                "&page=" +
+                page
+            );
 
-    const cards = doc.querySelectorAll(".bsx");
+            const cards = doc.querySelectorAll(".bsx");
 
-    return cards.map(mangaCard);
+            return cards.map(mangaCard);
 
-    }
+        }
 
     // Homepage browsing
     const doc = await getDoc(
@@ -335,13 +331,6 @@ const plugin = {
     },
     async search(query, offset = 0, tagId) {
 
-    throw new Error(
-        JSON.stringify({
-            query,
-            offset,
-            tagId
-        })
-    );
     const library = await loadLibrary();
 
     query = query.toLowerCase();
