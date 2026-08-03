@@ -243,6 +243,7 @@ const plugin = {
     while (path) {
 
         const doc = await getDoc(path);
+        throw new Error(path);
 
         doc.querySelectorAll(".chapter-card").forEach(card => {
 
