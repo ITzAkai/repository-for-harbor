@@ -242,7 +242,6 @@ const plugin = {
     while (path) {
 
         const doc = await getDoc(path);
-        throw new Error("TEST123");
 
         doc.querySelectorAll(".chapter-card").forEach(card => {
 
