@@ -100,65 +100,56 @@ const plugin = {
             group: "Collections"
             }
 
-        ];b
+        ];
 
     },
-    async popular(offset = 0) {
+    async popular(offset = 0, tagId) {
 
     const doc = await getDoc("/");
 
     const seen = new Set();
+
+    let selector = ".bsx";
+
+    if (tagId === "latest") {
+        selector = ".post-body .box";
+    }
 
     const manga = [];
 
-    // Homepage manga cards
-    doc.querySelectorAll(".bsx").forEach(card => {
-        const m = mangaCard(card);
+    doc.querySelectorAll(selector).forEach(card => {
 
-        if (!m) return;
+        let item;
 
-        if (seen.has(m.id)) return;
+        if (tagId === "latest") {
 
-        seen.add(m.id);
+            const link = card.querySelector(".imgu a");
 
-        manga.push(m);
+            if (!link) return;
+
+            item = {
+                id: cleanId(link.attr("href")),
+                title: text(card.querySelector(".info h3")),
+                cover: abs(card.querySelector(".imgu img")?.attr("src"))
+            };
+
+        } else {
+
+            item = mangaCard(card);
+
+        }
+
+        if (!item) return;
+
+        if (seen.has(item.id)) return;
+
+        seen.add(item.id);
+
+        manga.push(item);
+
     });
 
     return manga;
-
-    },
-    async latest(offset = 0) {
-
-    const doc = await getDoc("/");
-
-    const seen = new Set();
-
-    return doc
-        .querySelectorAll(".last-chapter .box")
-        .map(box => {
-
-            const series = box.querySelector(".imgu a");
-
-            if (!series) return null;
-
-            const href = series.attr("href") || "";
-
-            const id = href.replace(BASE + "/series/", "").replace(/\/$/, "");
-
-            if (seen.has(id)) return null;
-
-            seen.add(id);
-
-            return {
-                id,
-                title: box.querySelector(".info h3")?.text()?.trim(),
-                cover: abs(
-                    box.querySelector(".imgu img")?.attr("src")
-                )
-            };
-
-        })
-        .filter(Boolean);
 
     },
     async search(query, offset = 0) {
