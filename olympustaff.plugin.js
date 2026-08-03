@@ -105,9 +105,13 @@ const plugin = {
     },
     async popular(offset = 0) {
 
-    const page = Math.floor(offset / PAGE_SIZE) + 1;
+    let page = Math.floor(offset / PAGE_SIZE) + 1;
 
-    const doc = await getDoc("/?page=" + page);
+    if (page < 1)
+        page = 1;
+
+    const doc = await getDoc(page === 1 ? "/" : "/?page=" + page);
+
 
     const seen = new Set();
 
