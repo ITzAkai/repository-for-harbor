@@ -292,7 +292,7 @@ const plugin = {
 
     const cards = doc.querySelectorAll(".bsx");
 
-    throw new Error("Found " + cards.length + " cards");
+    return cards.map(mangaCard);
 
     }
 
