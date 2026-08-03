@@ -90,7 +90,18 @@ const plugin = {
         .filter(Boolean);
 
     },
+    async latest(offset = 0) {
 
+    const page = Math.floor(offset / PAGE_SIZE) + 1;
+
+    const doc = await getDoc("/?page=" + page);
+
+    return doc
+        .querySelectorAll(".bsx")
+        .map(mangaCard)
+        .filter(Boolean);
+
+    },
     async search(query, offset = 0) {
 
     const page = Math.floor(offset / PAGE_SIZE) + 1;
