@@ -100,16 +100,31 @@ const plugin = {
             group: "Collections"
             }
 
-        ];
+        ];b
 
     },
-    async popular(offset = 0, tagId) {
+    async popular(offset = 0) {
 
-    throw new Error(
-        "offset=" + offset +
-        " | tagId=" + tagId +
-        " | type=" + typeof tagId
-    );
+    const doc = await getDoc("/");
+
+    const seen = new Set();
+
+    const manga = [];
+
+    // Homepage manga cards
+    doc.querySelectorAll(".bsx").forEach(card => {
+        const m = mangaCard(card);
+
+        if (!m) return;
+
+        if (seen.has(m.id)) return;
+
+        seen.add(m.id);
+
+        manga.push(m);
+    });
+
+    return manga;
 
     },
     async latest(offset = 0) {
