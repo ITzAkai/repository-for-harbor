@@ -331,6 +331,10 @@ const plugin = {
     },
     async search(query, offset = 0, tagId) {
 
+    if (tagId) {
+        return this.popular(offset, tagId);
+    }
+
     const library = await loadLibrary();
 
     query = query.toLowerCase();
