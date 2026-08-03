@@ -92,13 +92,35 @@ const plugin = {
     },
     async latest(offset = 0) {
 
-    const page = Math.floor(offset / PAGE_SIZE) + 1;
+    const doc = await getDoc("/");
 
-    const doc = await getDoc("/?page=" + page);
+    const seen = new Set();
 
     return doc
-        .querySelectorAll(".bsx")
-        .map(mangaCard)
+        .querySelectorAll(".last-chapter .box")
+        .map(box => {
+
+            const series = box.querySelector(".imgu a");
+
+            if (!series) return null;
+
+            const href = series.attr("href") || "";
+
+            const id = href.replace(BASE + "/series/", "").replace(/\/$/, "");
+
+            if (seen.has(id)) return null;
+
+            seen.add(id);
+
+            return {
+                id,
+                title: box.querySelector(".info h3")?.text()?.trim(),
+                cover: abs(
+                    box.querySelector(".imgu img")?.attr("src")
+                )
+            };
+
+        })
         .filter(Boolean);
 
     },
