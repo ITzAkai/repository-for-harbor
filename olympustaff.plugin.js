@@ -235,91 +235,52 @@ const plugin = {
 
     async chapters(id) {
 
+    const doc = await getDoc("/series/" + id);
+
     const chapters = [];
-    const seen = new Set();
 
-    let path = "/series/" + id;
+    doc.querySelectorAll(".chapter-card").forEach(card => {
 
-    while (path) {
+        const link = card.querySelector(".chapter-link");
 
-        let doc;
+        if (!link)
+            return;
 
-        try {
-            doc = await getDoc(path);
+        const href = link.attr("href") || "";
 
-            throw new Error(
-                "PATH=" + path +
-                " | CHAPTERS=" +
-                doc.querySelectorAll(".chapter-card").length
-            );
+        const numberText =
+            card.querySelector(".chapter-number")
+                ?.text()
+                ?.trim() || "";
 
-        } catch (e) {
-            throw e;
-        }
+        const number = parseFloat(
+            numberText.replace(/[^\d.]/g, "")
+        );
 
-        doc.querySelectorAll(".chapter-card").forEach(card => {
+        chapters.push({
 
-            const a = card.querySelector(".chapter-link");
+            id: href.replace(BASE + "/", ""),
 
-            if (!a)
-                return;
+            chapter: isNaN(number)
+                ? null
+                : number,
 
-            const href = a.attr("href") || "";
+            title:
+                card.querySelector(".chapter-title")
+                    ?.text()
+                    ?.trim(),
 
-            const chapter = {
+            pages: 0,
 
-                id: href.replace(BASE + "/", ""),
+            language: "ar",
 
-                chapter: parseFloat(
-                    card.querySelector(".chapter-number")
-                        ?.text()
-                        .replace(/[^\d.]/g, "")
-                ) || 0,
-
-                title:
-                    card.querySelector(".chapter-title")
-                        ?.text()
-                        ?.trim(),
-
-                language: "ar",
-
-                publishAt:
-                    card.querySelector(".chapter-date span")
-                        ?.text()
-                        ?.trim()
-
-            };
-
-            if (seen.has(chapter.id))
-                return;
-
-            seen.add(chapter.id);
-            chapters.push(chapter);
+            publishAt:
+                card.querySelector(".chapter-date span")
+                    ?.text()
+                    ?.trim()
 
         });
 
-    const links = doc.querySelectorAll(".pagination a");
-
-    let next = null;
-
-    doc.querySelectorAll(".pagination a").forEach(a => {
-
-        if (a.attr("rel") === "next") {
-            next = a;
-        }
-
-    });
-
-        if (!next)
-            break;
-
-        path = next.attr("href")
-            .replace(BASE, "");
-
-    }
-
-    chapters.sort((a, b) => {
-        return (a.chapter || 0) - (b.chapter || 0);
     });
 
     return chapters;
