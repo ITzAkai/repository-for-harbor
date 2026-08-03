@@ -269,22 +269,13 @@ const plugin = {
     ];
 
     },
-    async popular(offset = 0, tagId) {
-    
+    async popular(offset = 0) {    
         let page = Math.floor(offset / PAGE_SIZE) + 1;
 
         if (page < 1)
             page = 1;
 
-        // Genre browsing
-        const doc = await getDoc(
-    "/series?genre=أكشن&page=" + page
-    );
-
-    const cards = doc.querySelectorAll(".bsx");
-
-    return cards.map(mangaCard);
-
+        
     // Homepage browsing
     const doc = await getDoc(
         page === 1
@@ -322,7 +313,7 @@ const plugin = {
         .filter(Boolean);
 
     },
-    async search(query, offset = 0, tagId) {
+    async search(query) {
 
     if (tagId) {
         return this.popular(offset, tagId);
