@@ -277,20 +277,13 @@ const plugin = {
             page = 1;
 
         // Genre browsing
-        if (tagId) {
+        const doc = await getDoc(
+    "/series?genre=أكشن&page=" + page
+    );
 
-            const doc = await getDoc(
-                "/series?genre=" +
-                encodeURIComponent(tagId) +
-                "&page=" +
-                page
-            );
+    const cards = doc.querySelectorAll(".bsx");
 
-            const cards = doc.querySelectorAll(".bsx");
-
-            return cards.map(mangaCard);
-
-        }
+    return cards.map(mangaCard);
 
     // Homepage browsing
     const doc = await getDoc(
