@@ -237,9 +237,7 @@ const plugin = {
 
     const chapters = [];
 
-    let page = 1;
-
-    while (true) {
+    for (let page = 1; page <= 3; page++) {
 
         const doc = await getDoc(
             "/series/" + id +
@@ -254,45 +252,26 @@ const plugin = {
 
                 if (!a) return null;
 
-                const href = a.attr("href") || "";
-
                 return {
-
-                    id: href.replace(BASE + "/", ""),
-
+                    id: a.attr("href").replace(BASE + "/", ""),
                     chapter: parseFloat(
                         card.querySelector(".chapter-number")
                             ?.text()
                             .replace(/[^\d.]/g, "")
                     ) || 0,
-
-                    title: card.querySelector(".chapter-title")
-                        ?.text()
-                        ?.trim(),
-
-                    language: "ar",
-
-                    publishAt:
-                        card.querySelector(".chapter-date span")
-                            ?.text()
-                            ?.trim()
-
+                    title: card.querySelector(".chapter-title")?.text()?.trim(),
+                    language: "ar"
                 };
 
             })
             .filter(Boolean);
 
-        if (list.length === 0)
-            break;
+        console.log("Page", page, list.length);
 
         chapters.push(...list);
-
-        page++;
-
     }
 
     return chapters;
-
     },
 
     async pageUrls(chapterId) {
