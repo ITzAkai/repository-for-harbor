@@ -235,53 +235,51 @@ const plugin = {
 
     async chapters(id) {
 
-    const doc = await getDoc("/series/" + id);
+    const doc = await getDoc("/series/" + id + "?page=2");
 
-    const chapters = [];
+const chapters = [];
 
-    doc.querySelectorAll(".chapter-card").forEach(card => {
+doc.querySelectorAll(".chapter-card").forEach(card => {
 
-        const link = card.querySelector(".chapter-link");
+    const link = card.querySelector(".chapter-link");
 
-        if (!link)
-            return;
+    if (!link)
+        return;
 
-        const href = link.attr("href") || "";
+    const href = link.attr("href") || "";
 
-        const numberText =
-            card.querySelector(".chapter-number")
+    const numberText =
+        card.querySelector(".chapter-number")
+            ?.text()
+            ?.trim() || "";
+
+    const number = parseFloat(
+        numberText.replace(/[^\d.]/g, "")
+    );
+
+    chapters.push({
+
+        id: href.replace(BASE + "/", ""),
+
+        chapter: isNaN(number) ? null : number,
+
+        title:
+            card.querySelector(".chapter-title")
                 ?.text()
-                ?.trim() || "";
+                ?.trim(),
 
-        const number = parseFloat(
-            numberText.replace(/[^\d.]/g, "")
-        );
+        pages: 0,
 
-        chapters.push({
+        language: "ar",
 
-            id: href.replace(BASE + "/", ""),
-
-            chapter: isNaN(number)
-                ? null
-                : number,
-
-            title:
-                card.querySelector(".chapter-title")
-                    ?.text()
-                    ?.trim(),
-
-            pages: 0,
-
-            language: "ar",
-
-            publishAt:
-                card.querySelector(".chapter-date span")
-                    ?.text()
-                    ?.trim()
-
-        });
+        publishAt:
+            card.querySelector(".chapter-date span")
+                ?.text()
+                ?.trim()
 
     });
+
+});
 
     return chapters;
 
