@@ -1,6 +1,8 @@
 const BASE = "https://olympustaff.com";
 const PAGE_SIZE = 48;
 
+let mangaCache = null;
+
 async function getDoc(path) {
 
     const url = BASE + path;
@@ -82,6 +84,68 @@ function mangaCard(card) {
             )
 
     };
+
+}
+async function loadLibrary() {
+
+    if (mangaCache)
+        return mangaCache;
+
+    mangaCache = [];
+
+    const seen = new Set();
+
+    let page = 1;
+
+    while (true) {
+
+        const doc = await getDoc(
+            page === 1
+                ? "/"
+                : "/?page=" + page
+        );
+
+        const cards = doc.querySelectorAll(".post-body .box");
+
+        if (cards.length === 0)
+            break;
+
+        cards.forEach(card => {
+
+            const link = card.querySelector(".imgu a");
+
+            if (!link)
+                return;
+
+            const manga = {
+
+                id: cleanId(link.attr("href")),
+
+                title:
+                    text(card.querySelector(".info h3")),
+
+                cover:
+                    abs(
+                        card.querySelector(".imgu img")
+                            ?.attr("src")
+                    )
+
+            };
+
+            if (seen.has(manga.id))
+                return;
+
+            seen.add(manga.id);
+
+            mangaCache.push(manga);
+
+        });
+
+        page++;
+
+    }
+
+    return mangaCache;
 
 }
 const plugin = {
@@ -172,29 +236,14 @@ const plugin = {
     },
     async search(query) {
 
-    const doc = await getDoc(
-        "/search?keyword=" + encodeURIComponent(query)
+    const library = await loadLibrary();
+
+    query = query.toLowerCase();
+
+    return library.filter(manga =>
+        manga.title &&
+        manga.title.toLowerCase().includes(query)
     );
-
-    return doc
-        .querySelectorAll("#results > a")
-        .map(a => ({
-
-            id: cleanId(a.attr("href")),
-
-            title:
-                a.querySelector("h4")
-                    ?.text()
-                    ?.trim(),
-
-            cover:
-                abs(
-                    a.querySelector("img")
-                        ?.attr("src")
-                )
-
-        }))
-        .filter(Boolean);
 
     },
     async detail(id) {
