@@ -284,6 +284,10 @@ const plugin = {
         page = 1;
 
     // Genre browsing
+    throw new Error(
+    "tagId = " + JSON.stringify(tagId)
+    );
+
     if (tagId) {
 
         const url =
