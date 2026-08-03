@@ -103,54 +103,52 @@ const plugin = {
         ];
 
     },
-    async popular(offset = 0, tagId) {
+    async popular(offset = 0) {
 
-    const doc = await getDoc("/");
+    const page = Math.floor(offset / PAGE_SIZE) + 1;
+
+    const doc = await getDoc("/?page=" + page);
 
     const seen = new Set();
 
-    let selector = ".bsx";
+    return doc
+        .querySelectorAll(".post-body .box")
+        .map(box => {
 
-    if (tagId === "latest") {
-        selector = ".post-body .box";
-    }
+            const link = box.querySelector(".imgu a");
 
-    const manga = [];
+            if (!link) return null;
 
-    doc.querySelectorAll(selector).forEach(card => {
+            const id = cleanId(link.attr("href"));
 
-        let item;
+            if (!id || seen.has(id))
+                return null;
 
-        if (tagId === "latest") {
+            seen.add(id);
 
-            const link = card.querySelector(".imgu a");
+            return {
 
-            if (!link) return;
+                id,
 
-            item = {
-                id: cleanId(link.attr("href")),
-                title: text(card.querySelector(".info h3")),
-                cover: abs(card.querySelector(".imgu img")?.attr("src"))
+                title:
+                    box.querySelector(".info h3")
+                        ?.text()
+                        ?.trim(),
+
+                cover:
+                    abs(
+                        box.querySelector(".imgu img")
+                            ?.attr("src")
+                    )
+
             };
 
-        } else {
+        })
+        .filter(Boolean);
 
-            item = mangaCard(card);
-
-        }
-
-        if (!item) return;
-
-        if (seen.has(item.id)) return;
-
-        seen.add(item.id);
-
-        manga.push(item);
-
-    });
-
-    return manga;
-
+    },
+    async latest(offset = 0) {
+    return this.popular(offset);
     },
     async search(query, offset = 0) {
 
