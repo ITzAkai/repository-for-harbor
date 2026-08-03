@@ -78,9 +78,19 @@ const plugin = {
 
     name: "OlympusStaff",
 
-    async popular(offset = 0) {
+    async tags() {
+    return [
+        { id: "popular", title: "Popular" },
+        { id: "latest", title: "Latest Updates" }
+    ];
+    },
+    async popular(offset = 0, tag) {
 
-    const page = Math.floor(offset / PAGE_SIZE) + 1;
+    if (tag === "latest") {
+        return this.latest(offset);
+    }
+
+    const page = Math.floor(offset / 48) + 1;
 
     const doc = await getDoc("/series?page=" + page);
 
@@ -88,7 +98,6 @@ const plugin = {
         .querySelectorAll(".bsx")
         .map(mangaCard)
         .filter(Boolean);
-
     },
     async latest(offset = 0) {
 
