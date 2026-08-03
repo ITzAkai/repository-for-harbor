@@ -243,51 +243,86 @@ const plugin = {
 
     async chapters(id) {
 
-    const doc = await getDoc("/series/" + id + "?page=2");
+    const chapters = [];
+    const seen = new Set();
 
-const chapters = [];
+    let page = 1;
 
-doc.querySelectorAll(".chapter-card").forEach(card => {
+    while (true) {
 
-    const link = card.querySelector(".chapter-link");
+        const doc = await getDoc(
+            "/series/" + id +
+            (page === 1 ? "" : "?page=" + page)
+        );
 
-    if (!link)
-        return;
+        const cards = doc.querySelectorAll(".chapter-card");
 
-    const href = link.attr("href") || "";
+        // Stop if this page has no chapters
+        if (cards.length === 0) {
+            break;
+        }
 
-    const numberText =
-        card.querySelector(".chapter-number")
-            ?.text()
-            ?.trim() || "";
+        cards.forEach(card => {
 
-    const number = parseFloat(
-        numberText.replace(/[^\d.]/g, "")
-    );
+            const link = card.querySelector(".chapter-link");
 
-    chapters.push({
+            if (!link)
+                return;
 
-        id: href.replace(BASE + "/", ""),
+            const href = link.attr("href") || "";
 
-        chapter: isNaN(number) ? null : number,
+            if (seen.has(href))
+                return;
 
-        title:
-            card.querySelector(".chapter-title")
-                ?.text()
-                ?.trim(),
+            seen.add(href);
 
-        pages: 0,
+            const numberText =
+                card.querySelector(".chapter-number")
+                    ?.text()
+                    ?.trim() || "";
 
-        language: "ar",
+            const number = parseFloat(
+                numberText.replace(/[^\d.]/g, "")
+            );
 
-        publishAt:
-            card.querySelector(".chapter-date span")
-                ?.text()
-                ?.trim()
+            chapters.push({
+
+                id: href.replace(BASE + "/", ""),
+
+                chapter: isNaN(number)
+                    ? null
+                    : number,
+
+                title:
+                    card.querySelector(".chapter-title")
+                        ?.text()
+                        ?.trim(),
+
+                pages: 0,
+
+                language: "ar",
+
+                publishAt:
+                    card.querySelector(".chapter-date span")
+                        ?.text()
+                        ?.trim()
+
+            });
+
+        });
+
+        page++;
+
+    }
+
+    chapters.sort((a, b) => {
+
+        if (a.chapter == null) return 1;
+        if (b.chapter == null) return -1;
+
+        return a.chapter - b.chapter;
 
     });
-
-});
 
     return chapters;
 
