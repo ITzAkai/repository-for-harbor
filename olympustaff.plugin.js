@@ -294,15 +294,13 @@ const plugin = {
 
     let next = null;
 
-    for (const a of links) {
+    doc.querySelectorAll(".pagination a").forEach(a => {
 
-        const href = a.attr("href") || "";
-
-        if (href.includes("?page=")) {
-        next = a;
+        if (a.attr("rel") === "next") {
+            next = a;
         }
 
-    }
+    });
 
         if (!next)
             break;
