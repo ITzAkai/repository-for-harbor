@@ -293,9 +293,7 @@ const plugin = {
 
                 id: href.replace(BASE + "/", ""),
 
-                chapter: isNaN(number)
-                    ? null
-                    : number,
+                chapter: numberText,
 
                 title:
                     card.querySelector(".chapter-title")
