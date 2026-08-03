@@ -236,42 +236,67 @@ const plugin = {
     async chapters(id) {
 
     const chapters = [];
+    const seen = new Set();
 
-    for (let page = 1; page <= 3; page++) {
+    let path = "/series/" + id;
 
-        const doc = await getDoc(
-            "/series/" + id +
-            (page === 1 ? "" : "?page=" + page)
-        );
+    while (path) {
 
-        const list = doc
-            .querySelectorAll(".chapter-card")
-            .map(card => {
+        const doc = await getDoc(path);
 
-                const a = card.querySelector(".chapter-link");
+        doc.querySelectorAll(".chapter-card").forEach(card => {
 
-                if (!a) return null;
+            const a = card.querySelector(".chapter-link");
 
-                return {
-                    id: a.attr("href").replace(BASE + "/", ""),
-                    chapter: parseFloat(
-                        card.querySelector(".chapter-number")
-                            ?.text()
-                            .replace(/[^\d.]/g, "")
-                    ) || 0,
-                    title: card.querySelector(".chapter-title")?.text()?.trim(),
-                    language: "ar"
-                };
+            if (!a)
+                return;
 
-            })
-            .filter(Boolean);
+            const href = a.attr("href") || "";
 
-        console.log("Page", page, list.length);
+            const chapter = {
 
-        chapters.push(...list);
+                id: href.replace(BASE + "/", ""),
+
+                chapter: parseFloat(
+                    card.querySelector(".chapter-number")
+                        ?.text()
+                        .replace(/[^\d.]/g, "")
+                ) || 0,
+
+                title:
+                    card.querySelector(".chapter-title")
+                        ?.text()
+                        ?.trim(),
+
+                language: "ar",
+
+                publishAt:
+                    card.querySelector(".chapter-date span")
+                        ?.text()
+                        ?.trim()
+
+            };
+
+            if (seen.has(chapter.id))
+                return;
+
+            seen.add(chapter.id);
+            chapters.push(chapter);
+
+        });
+
+        const next = doc.querySelector("a[rel='next']");
+
+        if (!next)
+            break;
+
+        path = next.attr("href")
+            .replace(BASE, "");
+
     }
 
     return chapters;
+
     },
 
     async pageUrls(chapterId) {
