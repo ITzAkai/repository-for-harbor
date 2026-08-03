@@ -169,44 +169,45 @@ const plugin = {
         })
         .filter(Boolean);
 
-},
-    async search(query, offset = 0) {
+    },
+    async search(query) {
 
-    const page = Math.floor(offset / PAGE_SIZE) + 1;
+    const res = await harbor.http(
+        BASE + "/ajax/search?keyword=" + encodeURIComponent(query),
+        {
+            responseType: "text",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        }
+    );
 
-    const endpoints = [
+    if (!res.ok)
+        return [];
 
-        "/series?search=" +
-        encodeURIComponent(query) +
-        "&page=" +
-        page,
+    const doc = harbor.parseHtml(res.body);
 
-        "/?s=" +
-        encodeURIComponent(query)
+    return doc
+        .querySelectorAll("a[href*='/series/']")
+        .map(link => ({
 
-    ];
+            id: cleanId(link.attr("href")),
 
-    for (const url of endpoints) {
+            title:
+                link.querySelector("h4")
+                    ?.text()
+                    ?.trim(),
 
-        try {
+            cover:
+                abs(
+                    link.querySelector("img")
+                        ?.attr("src")
+                )
 
-            const doc = await getDoc(url);
+        }))
+        .filter(m => m.id);
 
-            const list =
-                doc.querySelectorAll(".bsx")
-                    .map(mangaCard)
-                    .filter(Boolean);
-
-            if (list.length)
-                return list;
-
-        } catch (_) {}
-
-    }
-
-    return [];
-
-},
+    },
 
     async detail(id) {
     const doc = await getDoc("/series/" + id);
