@@ -245,8 +245,15 @@ const plugin = {
 
         try {
             doc = await getDoc(path);
+
+            throw new Error(
+                "PATH=" + path +
+                " | CHAPTERS=" +
+                doc.querySelectorAll(".chapter-card").length
+            );
+
         } catch (e) {
-            break;
+            throw e;
         }
 
         doc.querySelectorAll(".chapter-card").forEach(card => {
