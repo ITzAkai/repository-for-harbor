@@ -105,97 +105,11 @@ const plugin = {
     },
     async popular(offset = 0, tagId) {
 
-    // Latest Updates
-    if (tagId === "latest") {
-
-        const doc = await getDoc("/");
-
-        const seen = new Set();
-
-        return doc
-            .querySelectorAll(".last-chapter .box")
-            .map(box => {
-
-                const link = box.querySelector(".imgu a");
-
-                if (!link) return null;
-
-                const href = link.attr("href") || "";
-
-                const id = cleanId(href);
-
-                if (seen.has(id))
-                    return null;
-
-                seen.add(id);
-
-                return {
-
-                    id,
-
-                    title:
-                        box.querySelector(".info h3")
-                            ?.text()
-                            ?.trim(),
-
-                    cover:
-                        abs(
-                            box.querySelector(".imgu img")
-                                ?.attr("src")
-                        )
-
-                };
-
-            })
-            .filter(Boolean);
-
-    }
-
-    // Most Viewed (homepage slider)
-    if (tagId === "views") {
-
-        const doc = await getDoc("/");
-
-        return doc
-            .querySelectorAll(".popular-manga .swiper-slide")
-            .map(slide => {
-
-                const link = slide.querySelector("a");
-
-                if (!link) return null;
-
-                return {
-
-                    id: cleanId(link.attr("href")),
-
-                    title:
-                        slide.querySelector(".info h3")
-                            ?.text()
-                            ?.trim() ||
-                        link.attr("title"),
-
-                    cover:
-                        abs(
-                            slide.querySelector("img")
-                                ?.attr("src")
-                        )
-
-                };
-
-                })
-                .filter(Boolean);
-
-        }
-
-        // Default Popular
-        const page = Math.floor(offset / PAGE_SIZE) + 1;
-
-        const doc = await getDoc("/series?page=" + page);
-
-        return doc
-            .querySelectorAll(".bsx")
-            .map(mangaCard)
-            .filter(Boolean);
+    throw new Error(
+        "offset=" + offset +
+        " | tagId=" + tagId +
+        " | type=" + typeof tagId
+    );
 
     },
     async latest(offset = 0) {
