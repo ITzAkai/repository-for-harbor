@@ -277,7 +277,7 @@ const plugin = {
     async popular(offset = 0, tagId) {
     
         throw new Error("tagId = " + tagId);
-        
+
     let page = Math.floor(offset / PAGE_SIZE) + 1;
 
     if (page < 1)
@@ -286,12 +286,13 @@ const plugin = {
     // Genre browsing
     if (tagId) {
 
-        const doc = await getDoc(
-            "/series?genre=" +
-            encodeURIComponent(tagId) +
-            "&page=" +
-            page
-        );
+        const url =
+    "/series?genre=" +
+    encodeURIComponent(tagId) +
+    "&page=" +
+    page;
+
+    throw new Error(url);
 
         return doc
             .querySelectorAll(".bsx")
