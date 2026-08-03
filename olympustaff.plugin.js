@@ -102,82 +102,58 @@ const plugin = {
         .filter(Boolean);
 
     },
-    async popular(offset = 0, tagId) {
-
+    async popular(offset = 0) {
+    
     const page = Math.floor(offset / PAGE_SIZE) + 1;
 
-    let doc;
+    let path = page === 1 ? "/" : "/?page=" + page;
 
-    // Browse by Genre
     if (tagId) {
-
-        doc = await getDoc(
-            "/series?genre=" +
-            encodeURIComponent(tagId) +
-            "&page=" +
-            page
-        );
-
+        path += (path.includes("?") ? "&" : "?") +
+            "genre=" + encodeURIComponent(tagId);
     }
-    // Homepage (Latest Updates)
-    else {
 
-        doc = await getDoc(
-            page === 1
-                ? "/"
-                : "/?page=" + page
-        );
+    const doc = await getDoc(path);
+    let page = Math.floor(offset / PAGE_SIZE) + 1;
 
-    }
+    if (page < 1)
+        page = 1;
+
+
 
     const seen = new Set();
 
     return doc
-        .querySelectorAll(tagId ? ".bsx" : ".post-body .box")
-        .map(card => {
+        .querySelectorAll(".post-body .box")
+        .map(box => {
 
-            let item;
+            const link = box.querySelector(".imgu a");
 
-            // Genre pages (/series)
-            if (tagId) {
+            if (!link) return null;
 
-                item = mangaCard(card);
+            const id = cleanId(link.attr("href"));
 
-            }
-            // Homepage
-            else {
-
-                const link = card.querySelector(".imgu a");
-
-                if (!link)
-                    return null;
-
-                item = {
-
-                    id: cleanId(link.attr("href")),
-
-                    title:
-                        text(card.querySelector(".info h3")),
-
-                    cover:
-                        abs(
-                            card.querySelector(".imgu img")
-                                ?.attr("src")
-                        )
-
-                };
-
-            }
-
-            if (!item)
+            if (!id || seen.has(id))
                 return null;
 
-            if (seen.has(item.id))
-                return null;
+            seen.add(id);
 
-            seen.add(item.id);
+            return {
 
-            return item;
+                id,
+
+                title:
+                    box.querySelector(".info h3")
+                        ?.text()
+                        ?.trim(),
+
+                cover:
+                    abs(
+                        box.querySelector(".imgu img")
+                            ?.attr("src")
+                    )
+
+            };
 
         })
         .filter(Boolean);
