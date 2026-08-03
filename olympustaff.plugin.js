@@ -119,6 +119,7 @@ const plugin = {
     if (page < 1)
         page = 1;
 
+    const doc = await getDoc(page === 1 ? "/" : "/?page=" + page);
 
 
     const seen = new Set();
