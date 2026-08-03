@@ -73,10 +73,9 @@ function mangaCard(card) {
 
 }
 const plugin = {
-
     id: "olympustaff",
-
     name: "OlympusStaff",
+    lang: "en",
 
     async tags() {
 
