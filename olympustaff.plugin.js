@@ -241,7 +241,13 @@ const plugin = {
 
     while (path) {
 
-        const doc = await getDoc(path);
+        let doc;
+
+        try {
+            doc = await getDoc(path);
+        } catch (e) {
+            break;
+        }
 
         doc.querySelectorAll(".chapter-card").forEach(card => {
 
@@ -284,7 +290,19 @@ const plugin = {
 
         });
 
-        const next = doc.querySelector("a[rel='next']");
+    const links = doc.querySelectorAll(".pagination a");
+
+    let next = null;
+
+    for (const a of links) {
+
+        const href = a.attr("href") || "";
+
+        if (href.includes("?page=")) {
+        next = a;
+        }
+
+    }
 
         if (!next)
             break;
