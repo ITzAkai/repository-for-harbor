@@ -1,167 +1,48 @@
 const BASE = "https://olympustaff.com";
 
-async function getText(url) {
-    const res = await harbor.http(url, {
-        responseType: "text",
-        headers: {
-            "User-Agent": "Mozilla/5.0"
-        }
+async function getDoc(path) {
+    const res = await harbor.http(BASE + path, {
+        responseType: "text"
     });
 
-    if (!res) throw new Error("Failed: " + url);
-    return res;
-}
-
-function decode(text) {
-    return text
-        .replace(/&amp;/g, "&")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">");
-}
-
-function between(text, start, end) {
-    const s = text.indexOf(start);
-    if (s < 0) return "";
-    const e = text.indexOf(end, s + start.length);
-    if (e < 0) return "";
-    return text.substring(s + start.length, e);
-}
-
-function parseSeries(html) {
-
-    const manga = [];
-
-    const regex = /<a[^>]+href="([^"]*\/series\/[^"]+)"[\s\S]*?<img[^>]+src="([^"]+)"[\s\S]*?<h[^>]*>(.*?)<\/h/gi;
-
-    let m;
-
-    while ((m = regex.exec(html)) !== null) {
-
-        manga.push({
-            id: m[1].replace(BASE, ""),
-            title: decode(m[3]).trim(),
-            cover: m[2]
-        });
-
+    if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${path}`);
     }
 
-    return manga;
+    return harbor.parseHtml(res.body);
 }
 
-function parseSearch(html) {
+function abs(url) {
+    if (!url) return undefined;
 
-    const manga = [];
+    if (url.startsWith("http://") || url.startsWith("https://"))
+        return url;
 
-    const regex = /<a[^>]+href="([^"]*\/series\/[^"]+)"[\s\S]*?src="([^"]+)"[\s\S]*?>([^<]+)<\/a>/gi;
+    if (url.startsWith("//"))
+        return "https:" + url;
 
-    let m;
+    if (url.startsWith("/"))
+        return BASE + url;
 
-    while ((m = regex.exec(html)) !== null) {
-
-        manga.push({
-            id: m[1].replace(BASE, ""),
-            title: decode(m[3]).trim(),
-            cover: m[2]
-        });
-
-    }
-
-    return manga;
+    return BASE + "/" + url;
 }
 
-function parseDetails(html) {
+function mangaCard(card) {
 
-    const title =
-        between(html, "<h1", "</h1>")
-            .replace(/<[^>]+>/g, "")
-            .trim();
+    const link = card.querySelector("a");
+    const img = card.querySelector("img");
+    const title = card.querySelector(".tt");
 
-    const description =
-        between(html, 'class="description"', "</div>")
-            .replace(/<[^>]+>/g, "")
-            .trim();
+    if (!link)
+        return null;
 
-    const cover =
-        between(html, 'property="og:image" content="', '"');
+    const href = link.attr("href") || "";
 
     return {
-
-        id: "",
-
-        title: decode(title),
-
-        cover,
-
-        description: decode(description),
-
-        status: "Unknown",
-
-        author: "Unknown"
-
+        id: href.replace(BASE + "/series/", "").replace(/\/$/, ""),
+        title: title?.text()?.trim() || link.attr("title") || "",
+        cover: abs(img?.attr("src"))
     };
-
-}
-
-function parseChapters(html) {
-
-    const chapters = [];
-
-    const regex = /<a[^>]+href="([^"]*\/series\/[^"]+\/\d+)"[^>]*>([\s\S]*?)<\/a>/gi;
-
-    let m;
-
-    while ((m = regex.exec(html)) !== null) {
-
-        const url = m[1];
-
-        const text = m[2]
-            .replace(/<[^>]+>/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-
-        chapters.push({
-
-            id: url.replace(BASE, ""),
-
-            title: text
-
-        });
-
-    }
-
-    return chapters.reverse();
-
-}
-
-function parsePages(html) {
-
-    const pages = [];
-
-    const regex =
-        /https:\/\/olympustaff\.com\/uploads\/[^"' ]+\.(?:webp|jpg|jpeg|png)/gi;
-
-    const seen = new Set();
-
-    let m;
-
-    while ((m = regex.exec(html)) !== null) {
-
-        const url = m[0];
-
-        if (!seen.has(url)) {
-
-            seen.add(url);
-
-            pages.push(url);
-
-        }
-
-    }
-
-    return pages;
-
 }
 
 const plugin = {
@@ -170,68 +51,43 @@ const plugin = {
 
     name: "OlympusStaff",
 
-    version: "1.0.0",
+    async popular(offset = 0) {
 
-    lang: "ar",
+        const page = Math.floor(offset / 48) + 1;
 
-    nsfw: false,
+        const doc = await getDoc("/series?page=" + page);
 
-    async popular(page = 1) {
-
-        const html =
-            await getText(BASE + "/series?page=" + page);
-
-        return parseSeries(html);
+        return doc
+            .querySelectorAll(".bsx")
+            .map(mangaCard)
+            .filter(Boolean);
 
     },
 
-    async latest(page = 1) {
+    async search(query, offset = 0) {
 
-        const html =
-            await getText(BASE + "/series?page=" + page);
-
-        return parseSeries(html);
-
-    },
-
-    async search(query) {
-
-        const html =
-            await getText(
-                BASE +
-                "/ajax/search?keyword=" +
-                encodeURIComponent(query)
-            );
-
-        return parseSearch(html);
+        return [];
 
     },
 
     async detail(id) {
 
-        const html =
-            await getText(BASE + id);
-
-        return parseDetails(html);
+        return null;
 
     },
 
     async chapters(id) {
 
-        const html =
-            await getText(BASE + id);
-
-        return parseChapters(html);
+        return [];
 
     },
 
     async pageUrls(chapterId) {
 
-        const html =
-            await getText(BASE + chapterId);
-
-        return parsePages(html);
+        return [];
 
     }
 
 };
+
+return plugin;
