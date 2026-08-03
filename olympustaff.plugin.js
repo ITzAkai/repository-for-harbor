@@ -326,7 +326,7 @@ const plugin = {
 
     });
 
-    return chapters;
+    return chapters.reverse();
 
     },
 
