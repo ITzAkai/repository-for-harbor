@@ -156,31 +156,45 @@ const plugin = {
 
     async tags() {
 
-        return [
+    const doc = await getDoc("/series");
 
-            {
-            id: "popular",
-            name: "🔥 Popular",
-            group: "Collections"
-            },
+    return doc
+        .querySelectorAll("#select_genre option")
+        .map(option => {
 
-            {
-            id: "latest",
-            name: "🆕 Latest Updates",
-            group: "Collections"
-            },
+            const value = option.attr("value")?.trim();
 
-            {
-            id: "views",
-            name: "👑 Most Viewed",
-            group: "Collections"
-            }
+            if (!value)
+                return null;
 
-        ];
+            return {
+                id: value,
+                name: value,
+                group: "Genres"
+            };
+
+        })
+        .filter(Boolean);
 
     },
-    async popular(offset = 0) {
+    async popular(offset = 0, tagId) {
+    const page = Math.floor(offset / PAGE_SIZE) + 1;
 
+    if (tagId) {
+
+    const doc = await getDoc(
+        "/series?genre=" +
+        encodeURIComponent(tagId) +
+        "&page=" +
+        page
+    );
+
+    return doc
+        .querySelectorAll(".bsx")
+        .map(mangaCard)
+        .filter(Boolean);
+
+    }
     let page = Math.floor(offset / PAGE_SIZE) + 1;
 
     if (page < 1)
