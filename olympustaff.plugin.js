@@ -158,8 +158,13 @@ const plugin = {
 
     return [
         {
-            id: "test",
-            name: "Test",
+            id: "أكشن",
+            name: "أكشن",
+            group: "Genres"
+        },
+        {
+            id: "رومانسي",
+            name: "رومانسي",
             group: "Genres"
         }
     ];
