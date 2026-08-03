@@ -75,7 +75,7 @@ function mangaCard(card) {
 const plugin = {
     id: "olympustaff",
     name: "OlympusStaff",
-    lang: "en",
+    lang: "ar",
 
     async tags() {
 
@@ -268,7 +268,7 @@ const plugin = {
                         ?.text()
                         ?.trim(),
 
-                language: "en",
+                language: "ar",
 
                 publishAt:
                     card.querySelector(".chapter-date span")
