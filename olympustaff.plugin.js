@@ -71,10 +71,41 @@ const plugin = {
     },
 
     async detail(id) {
+    const doc = await getDoc("/series/" + id);
 
-        return null;
+    const title = doc.querySelector(".author-info-title h1")?.text()?.trim();
 
-    },
+    const cover =
+        abs(
+            doc.querySelector(".col-md-3 img")?.attr("src")
+        );
+
+    const description =
+        doc.querySelector(".review-content p")
+            ?.text()
+            ?.trim();
+
+    const genres =
+        doc.querySelectorAll(".review-author-info a")
+            .map(a => a.text().trim())
+            .filter(Boolean);
+
+    const status =
+        doc.querySelectorAll(".full-list-info")
+            .find(x => x.text().includes("الحالة"))
+            ?.querySelector("a")
+            ?.text()
+            ?.trim();
+
+    return {
+        id,
+        title,
+        cover,
+        description,
+        genres,
+        status
+    };
+},
 
     async chapters(id) {
 
