@@ -235,77 +235,55 @@ const plugin = {
 
     async chapters(id) {
 
+    const doc = await getDoc("/series/" + id);
+
     const chapters = [];
-    const seen = new Set();
 
-    let page = 1;
+    doc.querySelectorAll(".chapter-card").forEach(card => {
 
-    while (true) {
+        const link = card.querySelector(".chapter-link");
 
-        const doc = await getDoc(
-            "/series/" + id +
-            (page === 1 ? "" : "?page=" + page)
+        if (!link)
+            return;
+
+        const href = link.attr("href") || "";
+
+        const numberText =
+            card.querySelector(".chapter-number")
+                ?.text()
+                ?.trim() || "";
+
+        const number = parseFloat(
+            numberText.replace(/[^\d.]/g, "")
         );
 
-        const list = doc.querySelectorAll(".chapter-card");
+        chapters.push({
 
-        if (!list.length)
-            break;
+            id: href.replace(BASE + "/", ""),
 
-        list.forEach(card => {
+            chapter: isNaN(number)
+                ? null
+                : number,
 
-            const link = card.querySelector(".chapter-link");
-
-            if (!link)
-                return;
-
-            const href = link.attr("href") || "";
-
-            if (seen.has(href))
-                return;
-
-            seen.add(href);
-
-            const numberText =
-                card.querySelector(".chapter-number")
+            title:
+                card.querySelector(".chapter-title")
                     ?.text()
-                    ?.trim() || "";
+                    ?.trim(),
 
-            const number = parseFloat(
-                numberText.replace(/[^\d.]/g, "")
-            );
+            pages: 0,
 
-            chapters.push({
+            language: "ar",
 
-                id: href.replace(BASE + "/", ""),
-
-                chapter: isNaN(number)
-                    ? null
-                    : number,
-
-                title:
-                    card.querySelector(".chapter-title")
-                        ?.text()
-                        ?.trim(),
-
-                pages: 0,
-
-                language: "ar",
-
-                publishAt:
-                    card.querySelector(".chapter-date span")
-                        ?.text()
-                        ?.trim()
-
-            });
+            publishAt:
+                card.querySelector(".chapter-date span")
+                    ?.text()
+                    ?.trim()
 
         });
 
-        page++;
+    });
 
-    }
-
-    return chapters.reverse();
+    return chapters;
 
     },
 
