@@ -111,43 +111,11 @@ const plugin = {
 
     const doc = await getDoc("/series/" + id);
 
-    return doc
-        .querySelectorAll(".chapter-card")
-        .map(card => {
+    const cards = doc.querySelectorAll(".chapter-card");
 
-            const a = card.querySelector(".chapter-link");
+    throw new Error("Chapter cards found: " + cards.length);
 
-            if (!a) return null;
-
-            const href = a.attr("href") || "";
-
-            return {
-
-                id: href.replace(BASE + "/", ""),
-
-                chapter: parseFloat(
-                    card.querySelector(".chapter-number")
-                        ?.text()
-                        .replace(/[^\d.]/g, "")
-                ) || 0,
-
-                title: card.querySelector(".chapter-title")
-                    ?.text()
-                    ?.trim(),
-
-                language: "ar",
-
-                publishAt:
-                    card.querySelector(".chapter-date span")
-                        ?.text()
-                        ?.trim()
-
-            };
-
-        })
-        .filter(Boolean);
-
-    },
+},
 
     async pageUrls(chapterId) {
 
