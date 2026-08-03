@@ -178,28 +178,30 @@ const plugin = {
 
     },
     async popular(offset = 0, tagId) {
-    const page = Math.floor(offset / PAGE_SIZE) + 1;
 
-    if (tagId) {
-
-    const doc = await getDoc(
-        "/series?genre=" +
-        encodeURIComponent(tagId) +
-        "&page=" +
-        page
-    );
-
-    return doc
-        .querySelectorAll(".bsx")
-        .map(mangaCard)
-        .filter(Boolean);
-
-    }
     let page = Math.floor(offset / PAGE_SIZE) + 1;
 
     if (page < 1)
         page = 1;
 
+    // Genre browsing
+    if (tagId) {
+
+        const doc = await getDoc(
+            "/series?genre=" +
+            encodeURIComponent(tagId) +
+            "&page=" +
+            page
+        );
+
+        return doc
+            .querySelectorAll(".bsx")
+            .map(mangaCard)
+            .filter(Boolean);
+
+    }
+
+    // Homepage browsing
     const doc = await getDoc(
         page === 1
             ? "/"
