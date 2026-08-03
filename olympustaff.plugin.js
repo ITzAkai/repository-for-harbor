@@ -231,47 +231,67 @@ const plugin = {
         genres,
         status
     };
-},
+    },
 
     async chapters(id) {
 
-    const doc = await getDoc("/series/" + id);
+    const chapters = [];
 
-    return doc
-        .querySelectorAll(".chapter-card")
-        .map(card => {
+    let page = 1;
 
-            const a = card.querySelector(".chapter-link");
+    while (true) {
 
-            if (!a) return null;
+        const doc = await getDoc(
+            "/series/" + id +
+            (page === 1 ? "" : "?page=" + page)
+        );
 
-            const href = a.attr("href") || "";
+        const list = doc
+            .querySelectorAll(".chapter-card")
+            .map(card => {
 
-            return {
+                const a = card.querySelector(".chapter-link");
 
-                id: href.replace(BASE + "/", ""),
+                if (!a) return null;
 
-                chapter: parseFloat(
-                    card.querySelector(".chapter-number")
+                const href = a.attr("href") || "";
+
+                return {
+
+                    id: href.replace(BASE + "/", ""),
+
+                    chapter: parseFloat(
+                        card.querySelector(".chapter-number")
+                            ?.text()
+                            .replace(/[^\d.]/g, "")
+                    ) || 0,
+
+                    title: card.querySelector(".chapter-title")
                         ?.text()
-                        .replace(/[^\d.]/g, "")
-                ) || 0,
+                        ?.trim(),
 
-                title: card.querySelector(".chapter-title")
-                    ?.text()
-                    ?.trim(),
+                    language: "ar",
 
-                language: "ar",
+                    publishAt:
+                        card.querySelector(".chapter-date span")
+                            ?.text()
+                            ?.trim()
 
-                publishAt:
-                    card.querySelector(".chapter-date span")
-                        ?.text()
-                        ?.trim()
+                };
 
-            };
+            })
+            .filter(Boolean);
 
-        })
-        .filter(Boolean);
+        if (list.length === 0)
+            break;
+
+        chapters.push(...list);
+
+        page++;
+
+    }
+
+    return chapters;
 
     },
 
