@@ -252,7 +252,7 @@ return doc
         status,
         genres
         };
-
+        throw new Error("DETAIL ID = " + id);
     },
 
     async chapters(id) {
