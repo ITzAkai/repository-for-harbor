@@ -14,7 +14,7 @@
       "id": "3asq",
       "name": "3asq (Arabic)",
       "version": "1.0.5",
-      "lang": "ar",
+      "lang": "en",
       "nsfw": false,
       "icon": "https://3asq.online/favicon.ico",
       "entry": "3asq.plugin.js"
