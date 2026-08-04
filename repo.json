@@ -13,11 +13,20 @@
     {
       "id": "olympustaff",
       "name": "TeamX (Arabic)",
-      "version": "1.1.0",
+      "version": "1.0.1",
       "lang": "ar",
       "nsfw": false,
       "icon": "https://olympustaff.com/assets/images/favicon.png",
       "entry": "olympustaff.plugin.js"
+    },
+    {
+      "id": "3asq",
+      "name": "3asq (Arabic)",
+      "version": "1.0.0",
+      "lang": "ar",
+      "nsfw": false,
+      "icon": "https://3asq.online/favicon.ico",
+      "entry": "3asq.plugin.js"
     }
   ]
 }
