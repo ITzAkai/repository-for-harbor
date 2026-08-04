@@ -123,7 +123,7 @@ async function loadLibrary() {
 const plugin = {
     id: "3asq",
     name: "3asq",
-    version: "1.0.3",
+    version: "1.0.4",
     lang: "ar",
 
     
@@ -196,153 +196,87 @@ return doc
 
     const doc = await getDoc("/manga/" + id);
 
-    const title =
-        text(doc.querySelector(".post-title h1"));
-
-    const cover =
-        abs(
-            doc.querySelector(".summary_image img")
-                ?.attr("src")
-        );
-
-    const description =
-        text(doc.querySelector(".manga-excerpt p"));
-
-    const author =
-        text(
-            doc.querySelector(".author-content a")
-        );
-
-    const artist =
-        text(
-            doc.querySelector(".artist-content a")
-        );
+    const title = text(doc.querySelector(".post-title h1"));
+    const cover = abs(doc.querySelector(".summary_image img")?.attr("src"));
+    const description = text(doc.querySelector(".manga-excerpt p"));
+    const author = text(doc.querySelector(".author-content a"));
+    const artist = text(doc.querySelector(".artist-content a"));
 
     const status =
         doc.querySelectorAll(".post-content_item")
-            .find(x =>
-                text(x.querySelector(".summary-heading h5")) === "الحالة"
-            )
-            ?.querySelector(".summary-content")
-            ?.text()
-            ?.trim();
+            .find(x => text(x.querySelector(".summary-heading h5")) === "الحالة")
+            ?.querySelector(".summary-content")?.text()?.trim();
 
     const altTitle =
         doc.querySelectorAll(".post-content_item")
-            .find(x =>
-                text(x.querySelector(".summary-heading h5")) === "أسماء أخرى"
-            )
-            ?.querySelector(".summary-content")
-            ?.text()
-            ?.trim();
+            .find(x => text(x.querySelector(".summary-heading h5")) === "أسماء أخرى")
+            ?.querySelector(".summary-content")?.text()?.trim();
 
     const genres =
         doc.querySelectorAll(".genres-content a")
             .map(a => a.text().trim())
             .filter(Boolean);
 
-    return {
-        id,
-        title,
-        cover,
-        description,
-        author,
-        artist,
-        altTitle,
-        status,
-        genres
-        };
-        throw new Error("DETAIL ID = " + id);
-    },
+    return { id, title, cover, description, author, artist, altTitle, status, genres };
+    // (removed the unreachable throw)
+},
 
-    async chapters(id) {
+async chapters(id) {
 
     const doc = await getDoc("/manga/" + id);
-    
-    throw new Error(
-        "Chapters found: " +
-        doc.querySelectorAll(".wp-manga-chapter").length
-    );
+    // (removed the debug throw — it made everything below dead code)
 
     const chapters = doc
         .querySelectorAll(".wp-manga-chapter")
         .map(chapter => {
 
             const link = chapter.querySelector("a");
-
-            if (!link)
-                return null;
+            if (!link) return null;
 
             const href = link.attr("href");
-
             const title = text(link);
-
-            const numberMatch =
-                title.match(/[\d.]+/);
-
-            const number =
-                numberMatch
-                    ? numberMatch[0]
-                    : "";
+            const numberMatch = title.match(/[\d.]+/);
+            const number = numberMatch ? numberMatch[0] : "";
 
             return {
-
-                id: cleanId(href),
-
+                id: cleanId(href),          // keep the full resolvable path — see pageUrls
                 chapter: number,
-
                 title,
-
                 pages: 0,
-
                 language: "ar",
-
-                publishAt:
-                    text(
-                        chapter.querySelector(".chapter-release-date")
-                    )
-
+                publishAt: text(chapter.querySelector(".chapter-release-date"))
             };
-
         })
         .filter(Boolean);
 
     chapters.sort((a, b) => {
+        if (a.chapter == null) return 1;
+        if (b.chapter == null) return -1;
+        return parseFloat(a.chapter || 0) - parseFloat(b.chapter || 0);
+    });
 
-    if (a.chapter == null) return 1;
-    if (b.chapter == null) return -1;
-
-    return (
-        parseFloat(a.chapter || 0) -
-        parseFloat(b.chapter || 0)
-    );
-
-});
-
-return chapters.reverse();
-
+    return chapters.reverse();
 },
 
-    async pageUrls(chapterId) {
+async pageUrls(chapterId) {
 
-    const url = chapterId.startsWith("http")
+    // chapter paths live under /manga/ just like the manga page,
+    // so rebuild under that root instead of the bare path
+    const path = chapterId.startsWith("http")
         ? chapterId.replace(BASE, "")
-        : "/" + chapterId.replace(/^\/+/, "");
+        : "/manga/" + chapterId.replace(/^\/+/, "");
 
-    const doc = await getDoc(url);
+    const doc = await getDoc(path);
 
     const pages = doc
         .querySelectorAll(".manga-chapter-img")
         .map(img => abs(img.attr("src")))
         .filter(Boolean);
 
-    if (!pages.length) {
-        throw new Error("No pages found");
-    }
+    if (!pages.length) throw new Error("No pages found");
 
     return pages;
     }
-
 };
 
 return plugin;
