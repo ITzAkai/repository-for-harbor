@@ -123,7 +123,7 @@ async function loadLibrary() {
 const plugin = {
     id: "3asq",
     name: "3asq",
-    version: "1.0.2",
+    version: "1.0.3",
     lang: "ar",
 
     
@@ -258,6 +258,11 @@ return doc
     async chapters(id) {
 
     const doc = await getDoc("/manga/" + id);
+    
+    throw new Error(
+        "Chapters found: " +
+        doc.querySelectorAll(".wp-manga-chapter").length
+    );
 
     const chapters = doc
         .querySelectorAll(".wp-manga-chapter")
