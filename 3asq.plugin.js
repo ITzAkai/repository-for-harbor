@@ -113,7 +113,7 @@ function parseChapters(doc) {
 const plugin = {
     id: "3asq",
     name: "3asq",
-    version: "1.0.9",
+    version: "1.1.0",
 
     async popular(offset = 0) {
         let page = Math.floor(offset / PAGE_SIZE) + 1;
@@ -213,14 +213,13 @@ const plugin = {
         const doc = await getDoc(path);
 
         const pages = doc
-            .querySelectorAll(".reading-content img.wp-manga-chapter-img, img.wp-manga-chapter-img")
-            .map(img => {
-                const raw = img.attr("data-src") || img.attr("src") || "";
-                return abs(raw.trim());   // <-- .trim() is the fix
-            })
+            .querySelectorAll("img.wp-manga-chapter-img")
+            .map(img => abs((img.attr("src") || "").trim()))
             .filter(Boolean);
 
-        if (!pages.length) throw new Error("No pages found for " + chapterId);
+        // force the answer onto the screen
+        throw new Error("COUNT=" + pages.length + " FIRST=" + pages[0]);
+
         return pages;
     }
 };
