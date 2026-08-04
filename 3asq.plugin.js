@@ -124,7 +124,7 @@ const plugin = {
     id: "3asq",
     name: "3asq",
     version: "1.0.4",
-    lang: "ar",
+    lang: "en",
 
     
     
@@ -243,7 +243,7 @@ async chapters(id) {
                 chapter: number,
                 title,
                 pages: 0,
-                language: "ar",
+                language: "en",
                 publishAt: text(chapter.querySelector(".chapter-release-date"))
             };
         })
