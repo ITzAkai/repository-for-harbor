@@ -113,7 +113,7 @@ function parseChapters(doc) {
 const plugin = {
     id: "3asq",
     name: "3asq",
-    version: "1.0.5",
+    version: "1.0.7",
 
     async popular(offset = 0) {
         let page = Math.floor(offset / PAGE_SIZE) + 1;
@@ -206,8 +206,6 @@ const plugin = {
     },
 
     async pageUrls(chapterId) {
-        // chapterId is a cleaned path (e.g. "some-title/chapter-5").
-        // Fetch it back under /manga/ since cleanId stripped that prefix.
         const path = chapterId.startsWith("http")
             ? chapterId.replace(BASE, "")
             : "/manga/" + chapterId.replace(/^\/+/, "");
@@ -215,9 +213,25 @@ const plugin = {
         const doc = await getDoc(path);
 
         const pages = doc
-            .querySelectorAll(".manga-chapter-img, .reading-content img, .page-break img")
-            .map(img => abs(img.attr("data-src") || img.attr("src")))
-            .filter(Boolean);
+            .querySelectorAll(".reading-content img, .manga-chapter-img, .page-break img, .wp-manga-chapter-img")
+            .map(img =>
+                abs(
+                    img.attr("data-src") ||
+                    img.attr("data-lazy-src") ||
+                    img.attr("data-cfsrc") ||
+                    img.attr("srcset")?.trim()?.split(/\s+/)[0] ||
+                    img.attr("src")
+                )
+            )
+            .filter(Boolean)
+            // drop obvious placeholders (spinners, 1px gifs, data URIs)
+            .filter(u =>
+                !/^data:/i.test(u) &&
+                !/(loading|spinner|placeholder|lazy)\.(gif|png|svg)/i.test(u)
+            );
+
+        console.log("page count:", pages.length);
+        console.log("first page url:", pages[0]);
 
         if (!pages.length) throw new Error("No pages found for " + chapterId);
         return pages;
