@@ -58,30 +58,6 @@ function cleanId(url) {
         .replace(/\/$/, "");
 }
 
-function mangaCard(card) {
-
-    const link = card.querySelector("a");
-
-    if (!link)
-        return null;
-
-    return {
-
-        id: cleanId(attr(link, "href")),
-
-        title:
-            text(card.querySelector(".tt")) ||
-            attr(link, "title") ||
-            "Untitled",
-
-        cover:
-            abs(
-                attr(card.querySelector("img"), "src")
-            )
-
-    };
-
-}
 async function loadLibrary() {
 
     if (mangaCache)
@@ -147,7 +123,7 @@ async function loadLibrary() {
 const plugin = {
     id: "olympustaff",
     name: "OlympusStaff",
-    version: "1.0.1",
+    version: "1.1.0",
     lang: "ar",
 
     
@@ -286,13 +262,11 @@ const plugin = {
                     ?.text()
                     ?.trim() || "";
 
-            const number = parseFloat(
-                numberText.replace(/[^\d.]/g, "")
-            );
+            
 
             chapters.push({
 
-                id: href.replace(BASE + "/", ""),
+                id: cleanId(href),
 
                 chapter: numberText,
 
@@ -323,7 +297,10 @@ const plugin = {
         if (a.chapter == null) return 1;
         if (b.chapter == null) return -1;
 
-        return a.chapter - b.chapter;
+        return (
+            parseFloat(a.chapter || 0) -
+            parseFloat(b.chapter || 0)
+     );
 
     });
 
