@@ -113,7 +113,7 @@ function parseChapters(doc) {
 const plugin = {
     id: "3asq",
     name: "3asq",
-    version: "1.0.8",
+    version: "1.0.9",
 
     async popular(offset = 0) {
         let page = Math.floor(offset / PAGE_SIZE) + 1;
@@ -210,56 +210,15 @@ const plugin = {
             ? chapterId.replace(BASE, "")
             : "/manga/" + chapterId.replace(/^\/+/, "");
 
-        // fetch raw so we can both parse HTML and regex the body
-        const res = await harbor.http(BASE + path, {
-            responseType: "text",
-            headers: {
-                "Cache-Control": "no-cache",
-                "Pragma": "no-cache",
-                "Referer": BASE + "/"
-            }
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${path}`);
+        const doc = await getDoc(path);
 
-        const body = res.body;
-        const doc = harbor.parseHtml(body);
-
-        // --- Attempt 1: parse <img> elements from the reader container ---
-        let pages = doc
-            .querySelectorAll(".reading-content img, .manga-chapter-img, .page-break img, .wp-manga-chapter-img")
-            .map(img =>
-                abs(
-                    img.attr("data-src") ||
-                    img.attr("data-lazy-src") ||
-                    img.attr("data-cfsrc") ||
-                    img.attr("srcset")?.trim()?.split(/\s+/)[0] ||
-                    img.attr("src")
-                )
-            )
-            .filter(Boolean)
-            .filter(u => !/^data:/i.test(u) && !/(loading|spinner|placeholder|lazy)\.(gif|png|svg)/i.test(u));
-
-        // --- Attempt 2: images live in a <script>, invisible to parseHtml ---
-        if (!pages.length) {
-            const urls = [];
-            // match image URLs on the site's CDN inside the raw HTML/JS
-            const re = /https?:\\?\/\\?\/[^\s"'\\]+\.(?:jpg|jpeg|png|webp|gif)/gi;
-            let m;
-            while ((m = re.exec(body)) !== null) {
-                // unescape \/ that appears in JSON-embedded urls
-                urls.push(m[0].replace(/\\\//g, "/"));
-            }
-            // keep only chapter image urls, drop icons/thumbnails/avatars
-            pages = urls.filter(u =>
-                !/favicon|logo|avatar|thumb|cover|icon|banner/i.test(u)
-            );
-            // de-dupe while preserving order
-            pages = [...new Set(pages)];
-        }
-
-        console.log("page count:", pages.length);
-        console.log("first page url:", pages[0]);
-        console.log("last page url:", pages[pages.length - 1]);
+        const pages = doc
+            .querySelectorAll(".reading-content img.wp-manga-chapter-img, img.wp-manga-chapter-img")
+            .map(img => {
+                const raw = img.attr("data-src") || img.attr("src") || "";
+                return abs(raw.trim());   // <-- .trim() is the fix
+            })
+            .filter(Boolean);
 
         if (!pages.length) throw new Error("No pages found for " + chapterId);
         return pages;
