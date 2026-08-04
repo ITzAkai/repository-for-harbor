@@ -123,7 +123,7 @@ async function loadLibrary() {
 const plugin = {
     id: "3asq",
     name: "3asq",
-    version: "1.0.0",
+    version: "1.0.2",
     lang: "ar",
 
     
@@ -288,9 +288,13 @@ return doc
 
                 title,
 
-                date:
+                pages: 0,
+
+                language: "ar",
+
+                publishAt:
                     text(
-                        chapter.querySelector(".chapter-release-date .timediff")
+                        chapter.querySelector(".chapter-release-date")
                     )
 
             };
@@ -298,13 +302,19 @@ return doc
         })
         .filter(Boolean);
 
-    chapters.sort(
-        (a, b) =>
-            parseFloat(a.chapter || 0) -
-            parseFloat(b.chapter || 0)
+    chapters.sort((a, b) => {
+
+    if (a.chapter == null) return 1;
+    if (b.chapter == null) return -1;
+
+    return (
+        parseFloat(a.chapter || 0) -
+        parseFloat(b.chapter || 0)
     );
 
-    return chapters;
+});
+
+return chapters.reverse();
 
 },
 
