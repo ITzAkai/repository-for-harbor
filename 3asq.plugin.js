@@ -4,38 +4,38 @@ const PAGE_SIZE = 48;
 let mangaCache = null;
 
 async function getDoc(path) {
-
-    const url = BASE + path;
-
-    const res = await harbor.http(url, {
+    const res = await harbor.http(BASE + path, {
         responseType: "text",
         headers: {
             "Cache-Control": "no-cache",
             "Pragma": "no-cache"
         }
     });
-
-    if (!res.ok)
-        throw new Error(`HTTP ${res.status}: ${url}`);
-
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${path}`);
     return harbor.parseHtml(res.body);
 }
 
+// POST helper for Madara's admin-ajax chapter endpoint
+async function postDoc(path, body) {
+    const res = await harbor.http(BASE + path, {
+        method: "POST",
+        responseType: "text",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-Requested-With": "XMLHttpRequest",
+            "Cache-Control": "no-cache"
+        },
+        body
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${path}`);
+    return harbor.parseHtml(res.body);
+}
 
 function abs(url) {
-
-    if (!url)
-        return undefined;
-
-    if (/^https?:\/\//i.test(url))
-        return url;
-
-    if (url.startsWith("//"))
-        return "https:" + url;
-
-    if (url.startsWith("/"))
-        return BASE + url;
-
+    if (!url) return undefined;
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith("//")) return "https:" + url;
+    if (url.startsWith("/")) return BASE + url;
     return BASE + "/" + url;
 }
 
@@ -43,15 +43,8 @@ function text(node) {
     return node?.text()?.trim() || "";
 }
 
-function attr(node, name) {
-    return node?.attr(name);
-}
-
 function cleanId(url) {
-
-    if (!url)
-        return "";
-
+    if (!url) return "";
     return url
         .replace(BASE, "")
         .replace(/^\/manga\//, "")
@@ -59,177 +52,38 @@ function cleanId(url) {
 }
 
 async function loadLibrary() {
-
-    if (mangaCache)
-        return mangaCache;
-
+    if (mangaCache) return mangaCache;
     mangaCache = [];
-
     const seen = new Set();
-
     let page = 1;
 
     while (true) {
-
-        const doc = await getDoc(
-            page === 1
-                ? "/"
-                : "/?page=" + page
-        );
-
+        const doc = await getDoc(page === 1 ? "/" : "/page/" + page + "/");
         const cards = doc.querySelectorAll(".page-item-detail");
-
-        if (cards.length === 0)
-            break;
+        if (cards.length === 0) break;
 
         cards.forEach(card => {
-
             const link = card.querySelector(".post-title a");
-
-            if (!link)
-                return;
-
+            if (!link) return;
             const manga = {
-
                 id: cleanId(link.attr("href")),
-
-                title:
-                    text(card.querySelector(".post-title a")),
-
-                cover:
-                    abs(
-                        card.querySelector(".item-thumb img")
-                            ?.attr("src")
-                    )
-
-                };
-
-            if (seen.has(manga.id))
-                return;
-
+                title: text(card.querySelector(".post-title a")),
+                cover: abs(card.querySelector(".item-thumb img")?.attr("src"))
+            };
+            if (!manga.id || seen.has(manga.id)) return;
             seen.add(manga.id);
-
             mangaCache.push(manga);
-
         });
-
         page++;
-
     }
-
     return mangaCache;
-    
 }
-const plugin = {
-    id: "3asq",
-    name: "3asq",
-    version: "1.0.4",
-    lang: "en",
 
-    
-    
-    async popular(offset = 0) {    
-        let page = Math.floor(offset / PAGE_SIZE) + 1;
-
-        if (page < 1)
-            page = 1;
-
-        
-    // Homepage browsing
-    const doc = await getDoc(
-    page === 1
-        ? "/"
-        : "/page/" + page + "/"
-);
-
-const seen = new Set();
-
-return doc
-    .querySelectorAll(".page-item-detail")
-    .map(card => {
-
-        const link = card.querySelector(".post-title a");
-
-        if (!link)
-            return null;
-
-        const item = {
-
-            id: cleanId(link.attr("href")),
-
-            title:
-                text(link),
-
-            cover:
-                abs(
-                    card.querySelector(".item-thumb img")
-                        ?.attr("src")
-                )
-
-        };
-
-        if (!item.id || seen.has(item.id))
-            return null;
-
-        seen.add(item.id);
-
-        return item;
-
-    })
-    .filter(Boolean);
-
-    },
-    async search(query) {
-
-
-    const library = await loadLibrary();
-
-    query = query.toLowerCase();
-
-    return library.filter(manga =>
-        manga.title &&
-        manga.title.toLowerCase().includes(query)
-    );
-
-    },
-    async detail(id) {
-
-    const doc = await getDoc("/manga/" + id);
-
-    const title = text(doc.querySelector(".post-title h1"));
-    const cover = abs(doc.querySelector(".summary_image img")?.attr("src"));
-    const description = text(doc.querySelector(".manga-excerpt p"));
-    const author = text(doc.querySelector(".author-content a"));
-    const artist = text(doc.querySelector(".artist-content a"));
-
-    const status =
-        doc.querySelectorAll(".post-content_item")
-            .find(x => text(x.querySelector(".summary-heading h5")) === "الحالة")
-            ?.querySelector(".summary-content")?.text()?.trim();
-
-    const altTitle =
-        doc.querySelectorAll(".post-content_item")
-            .find(x => text(x.querySelector(".summary-heading h5")) === "أسماء أخرى")
-            ?.querySelector(".summary-content")?.text()?.trim();
-
-    const genres =
-        doc.querySelectorAll(".genres-content a")
-            .map(a => a.text().trim())
-            .filter(Boolean);
-
-    return { id, title, cover, description, author, artist, altTitle, status, genres };
-    // (removed the unreachable throw)
-},
-
-async chapters(id) {
-
-    const doc = await getDoc("/manga/" + id);
-    // (removed the debug throw — it made everything below dead code)
-
+// Parse a document that contains .wp-manga-chapter rows into chapter objects.
+function parseChapters(doc) {
     const chapters = doc
         .querySelectorAll(".wp-manga-chapter")
         .map(chapter => {
-
             const link = chapter.querySelector("a");
             if (!link) return null;
 
@@ -239,7 +93,7 @@ async chapters(id) {
             const number = numberMatch ? numberMatch[0] : "";
 
             return {
-                id: cleanId(href),          // keep the full resolvable path — see pageUrls
+                id: cleanId(href),
                 chapter: number,
                 title,
                 pages: 0,
@@ -249,33 +103,124 @@ async chapters(id) {
         })
         .filter(Boolean);
 
-    chapters.sort((a, b) => {
-        if (a.chapter == null) return 1;
-        if (b.chapter == null) return -1;
-        return parseFloat(a.chapter || 0) - parseFloat(b.chapter || 0);
-    });
+    chapters.sort((a, b) =>
+        parseFloat(a.chapter || 0) - parseFloat(b.chapter || 0)
+    );
 
     return chapters.reverse();
-},
+}
 
-async pageUrls(chapterId) {
+const plugin = {
+    id: "3asq",
+    name: "3asq",
+    version: "1.0.5",
 
-    // chapter paths live under /manga/ just like the manga page,
-    // so rebuild under that root instead of the bare path
-    const path = chapterId.startsWith("http")
-        ? chapterId.replace(BASE, "")
-        : "/manga/" + chapterId.replace(/^\/+/, "");
+    async popular(offset = 0) {
+        let page = Math.floor(offset / PAGE_SIZE) + 1;
+        if (page < 1) page = 1;
 
-    const doc = await getDoc(path);
+        const doc = await getDoc(page === 1 ? "/" : "/page/" + page + "/");
+        const seen = new Set();
 
-    const pages = doc
-        .querySelectorAll(".manga-chapter-img")
-        .map(img => abs(img.attr("src")))
-        .filter(Boolean);
+        return doc
+            .querySelectorAll(".page-item-detail")
+            .map(card => {
+                const link = card.querySelector(".post-title a");
+                if (!link) return null;
+                const item = {
+                    id: cleanId(link.attr("href")),
+                    title: text(link),
+                    cover: abs(card.querySelector(".item-thumb img")?.attr("src"))
+                };
+                if (!item.id || seen.has(item.id)) return null;
+                seen.add(item.id);
+                return item;
+            })
+            .filter(Boolean);
+    },
 
-    if (!pages.length) throw new Error("No pages found");
+    async search(query) {
+        const library = await loadLibrary();
+        query = query.toLowerCase();
+        return library.filter(m => m.title && m.title.toLowerCase().includes(query));
+    },
 
-    return pages;
+    async detail(id) {
+        const doc = await getDoc("/manga/" + id);
+
+        const title = text(doc.querySelector(".post-title h1"));
+        const cover = abs(doc.querySelector(".summary_image img")?.attr("src"));
+        const description = text(doc.querySelector(".manga-excerpt p"));
+        const author = text(doc.querySelector(".author-content a"));
+        const artist = text(doc.querySelector(".artist-content a"));
+
+        const status =
+            doc.querySelectorAll(".post-content_item")
+                .find(x => text(x.querySelector(".summary-heading h5")) === "الحالة")
+                ?.querySelector(".summary-content")?.text()?.trim();
+
+        const altTitle =
+            doc.querySelectorAll(".post-content_item")
+                .find(x => text(x.querySelector(".summary-heading h5")) === "أسماء أخرى")
+                ?.querySelector(".summary-content")?.text()?.trim();
+
+        const genres =
+            doc.querySelectorAll(".genres-content a")
+                .map(a => a.text().trim())
+                .filter(Boolean);
+
+        return { id, title, cover, description, author, artist, altTitle, status, genres };
+    },
+
+    async chapters(id) {
+        // Madara loads chapters via AJAX, not in the main /manga/ page HTML.
+        // Try the endpoints in order until one returns rows.
+
+        // 1) Modern Madara: POST to the manga page's ajax sub-path
+        try {
+            const doc = await postDoc("/manga/" + id + "/ajax/chapters/", "");
+            const ch = parseChapters(doc);
+            if (ch.length) return ch;
+        } catch (e) { /* fall through */ }
+
+        // 2) Older Madara: admin-ajax with action=manga_get_chapters.
+        //    Needs the numeric post id, read from the shortcode input on the page.
+        try {
+            const page = await getDoc("/manga/" + id);
+            const dataId =
+                page.querySelector(".rating-post-id")?.attr("value") ||
+                page.querySelector("#manga-chapters-holder")?.attr("data-id") ||
+                page.querySelector("input.rating-post-id")?.attr("value");
+
+            if (dataId) {
+                const body = "action=manga_get_chapters&manga=" + encodeURIComponent(dataId);
+                const doc = await postDoc("/wp-admin/admin-ajax.php", body);
+                const ch = parseChapters(doc);
+                if (ch.length) return ch;
+            }
+        } catch (e) { /* fall through */ }
+
+        // 3) Last resort: chapters already inline in the main page HTML
+        const doc = await getDoc("/manga/" + id);
+        return parseChapters(doc);
+    },
+
+    async pageUrls(chapterId) {
+        // chapterId is a cleaned path (e.g. "some-title/chapter-5").
+        // Fetch it back under /manga/ since cleanId stripped that prefix.
+        const path = chapterId.startsWith("http")
+            ? chapterId.replace(BASE, "")
+            : "/manga/" + chapterId.replace(/^\/+/, "");
+
+        const doc = await getDoc(path);
+
+        const pages = doc
+            .querySelectorAll(".manga-chapter-img, .reading-content img, .page-break img")
+            .map(img => abs(img.attr("data-src") || img.attr("src")))
+            .filter(Boolean);
+
+        if (!pages.length) throw new Error("No pages found for " + chapterId);
+        return pages;
     }
 };
 
