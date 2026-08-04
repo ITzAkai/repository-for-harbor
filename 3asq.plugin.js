@@ -113,7 +113,7 @@ function parseChapters(doc) {
 const plugin = {
     id: "3asq",
     name: "3asq",
-    version: "1.1.0",
+    version: "1.1.1",
 
     async popular(offset = 0) {
         let page = Math.floor(offset / PAGE_SIZE) + 1;
@@ -206,6 +206,7 @@ const plugin = {
     },
 
     async pageUrls(chapterId) {
+        throw new Error("PAGEURLS RUNNING, chapterId=" + chapterId);
         const path = chapterId.startsWith("http")
             ? chapterId.replace(BASE, "")
             : "/manga/" + chapterId.replace(/^\/+/, "");
