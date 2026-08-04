@@ -193,40 +193,66 @@ return doc
 
     },
     async detail(id) {
-    const doc = await getDoc("/series/" + id);
 
-    const title = doc.querySelector(".author-info-title h1")?.text()?.trim();
+    const doc = await getDoc("/manga/" + id);
+
+    const title =
+        text(doc.querySelector(".post-title h1"));
 
     const cover =
         abs(
-            doc.querySelector(".col-md-3 img")?.attr("src")
+            doc.querySelector(".summary_image img")
+                ?.attr("src")
         );
 
     const description =
-        doc.querySelector(".review-content p")
+        text(doc.querySelector(".manga-excerpt p"));
+
+    const author =
+        text(
+            doc.querySelector(".author-content a")
+        );
+
+    const artist =
+        text(
+            doc.querySelector(".artist-content a")
+        );
+
+    const status =
+        doc.querySelectorAll(".post-content_item")
+            .find(x =>
+                text(x.querySelector(".summary-heading h5")) === "الحالة"
+            )
+            ?.querySelector(".summary-content")
+            ?.text()
+            ?.trim();
+
+    const altTitle =
+        doc.querySelectorAll(".post-content_item")
+            .find(x =>
+                text(x.querySelector(".summary-heading h5")) === "أسماء أخرى"
+            )
+            ?.querySelector(".summary-content")
             ?.text()
             ?.trim();
 
     const genres =
-        doc.querySelectorAll(".review-author-info a")
+        doc.querySelectorAll(".genres-content a")
             .map(a => a.text().trim())
             .filter(Boolean);
-
-    const status =
-        doc.querySelectorAll(".full-list-info")
-            .find(x => x.text().includes("الحالة"))
-            ?.querySelector("a")
-            ?.text()
-            ?.trim();
 
     return {
         id,
         title,
         cover,
         description,
-        genres,
-        status
-    };
+        author,
+        artist,
+        altTitle,
+        status,
+        genres
+        };
+
     },
 
     async chapters(id) {
