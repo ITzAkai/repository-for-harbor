@@ -257,89 +257,56 @@ return doc
 
     async chapters(id) {
 
-    const chapters = [];
-    const seen = new Set();
+    const doc = await getDoc("/manga/" + id);
 
-    let page = 1;
+    const chapters = doc
+        .querySelectorAll(".wp-manga-chapter")
+        .map(chapter => {
 
-    while (true) {
-
-        const doc = await getDoc(
-            "/series/" + id +
-            (page === 1 ? "" : "?page=" + page)
-        );
-
-        const cards = doc.querySelectorAll(".chapter-card");
-
-        // Stop if this page has no chapters
-        if (cards.length === 0) {
-            break;
-        }
-
-        cards.forEach(card => {
-
-            const link = card.querySelector(".chapter-link");
+            const link = chapter.querySelector("a");
 
             if (!link)
-                return;
+                return null;
 
-            const href = link.attr("href") || "";
+            const href = link.attr("href");
 
-            if (seen.has(href))
-                return;
+            const title = text(link);
 
-            seen.add(href);
+            const numberMatch =
+                title.match(/[\d.]+/);
 
-            const numberText =
-                card.querySelector(".chapter-number")
-                    ?.text()
-                    ?.trim() || "";
+            const number =
+                numberMatch
+                    ? numberMatch[0]
+                    : "";
 
-            
-
-            chapters.push({
+            return {
 
                 id: cleanId(href),
 
-                chapter: numberText,
+                chapter: number,
 
-                title:
-                    card.querySelector(".chapter-title")
-                        ?.text()
-                        ?.trim(),
+                title,
 
-                pages: 0,
+                date:
+                    text(
+                        chapter.querySelector(".chapter-release-date .timediff")
+                    )
 
-                language: "ar",
+            };
 
-                publishAt:
-                    card.querySelector(".chapter-date span")
-                        ?.text()
-                        ?.trim()
+        })
+        .filter(Boolean);
 
-            });
-
-        });
-
-        page++;
-
-    }
-
-    chapters.sort((a, b) => {
-
-        if (a.chapter == null) return 1;
-        if (b.chapter == null) return -1;
-
-        return (
+    chapters.sort(
+        (a, b) =>
             parseFloat(a.chapter || 0) -
             parseFloat(b.chapter || 0)
-     );
+    );
 
-    });
+    return chapters;
 
-    return chapters.reverse();
-
-    },
+},
 
     async pageUrls(chapterId) {
 
